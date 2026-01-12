@@ -2,12 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Submit URL</title>
+    <title>URL Crawler</title>
 </head>
 <body>
-    <form method="POST" action="https://urlcrawler.vercel.app/">
-        <input type="url" name="target_url" placeholder="Paste URL here" required>
-        <button type="submit">Submit</button>
-    </form>
+    <input type="url" id="u" placeholder="Paste URL ending with number">
+    <button onclick="run()">Submit</button>
+    <pre id="out"></pre>
+
+<script>
+async function run() {
+    const input = document.getElementById("u").value;
+    const m = input.match(/(.*?)(\d+)$/);
+    if (!m) return;
+
+    const base = m[1];
+    let n = parseInt(m[2], 10);
+    const vids = [];
+
+    for (; n >= 0; n--) {
+        try {
+            const r = await fetch(base + n);
+            if (!r.ok) continue;
+            const t = await r.text();
+            const d = new DOMParser().parseFromString(t, "text/html");
+
+            d.querySelectorAll("video").forEach(v => {
+                if (v.classList.contains("hidden")) return;
+                let src = v.src || v.querySelector("source")?.src;
+                if (src) vids.push(src);
+            });
+        } catch {}
+    }
+
+    document.getElementById("out").textContent =
+        JSON.stringify(vids, null, 2);
+}
+</script>
 </body>
 </html>
